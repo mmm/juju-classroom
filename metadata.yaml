@@ -1,0 +1,10 @@
+ensemble: formula
+name: byobu-web
+revision: 28
+summary: "Remote byobu/ajaxterm access through a web browser"
+description: |
+ byobu-web provides remote terminal access through a web browser,
+ using byobu, and ajaxterm.
+provides:
+  website:
+    interface: website

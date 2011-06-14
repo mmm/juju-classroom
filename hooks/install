@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+#    install hook
+#    Copyright (C) 2011 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@ubuntu.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, version 3 of the License.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+# Enable byobu, install byobu+ajaxterm
+echo "byobu byobu/launch-by-default boolean true" | debconf-set-selections
+apt-get -y install ajaxterm byobu
+
+# Update ajaxterm configuration
+# Most web browsers can do a little better than 80x25; bump to 160x40
+sed -i -e "s/^width=.*/width=160;/" -e "s/^height=.*/height=40;/" /etc/ajaxterm.conf
+
+# Update byobu profile; needs a whitespace at the end of the last line for ajaxterm (?)
+sed -i -e "s/^\(hardstatus .*\)'/\1 '/" /usr/share/byobu/profiles/common
+
+# Update ssh configuration
+sed -i -e "s:PasswordAuthentication.*:PasswordAuthentication yes:" /etc/ssh/sshd_config
+service ssh restart
+
+# Update apache configuration
+a2enmod proxy_http
+a2enmod ssl
+a2ensite default-ssl
+make-ssl-cert generate-default-snakeoil --force-overwrite
+sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/default-ssl
+service apache2 restart
+
+# Now point a web-browser to this host's https://fully.qualified.hostname/
