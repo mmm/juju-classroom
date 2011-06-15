@@ -19,12 +19,16 @@
 
 
 # Enable byobu, install byobu+ajaxterm
-echo "byobu byobu/launch-by-default boolean true" | debconf-set-selections
 apt-get -y install ajaxterm byobu
+echo "byobu byobu/launch-by-default boolean true" | debconf-set-selections
+dpkg-reconfigure -phigh byobu
 
 # Update ajaxterm configuration
 # Most web browsers can do a little better than 80x25; bump to 160x40
 sed -i -e "s/^width=.*/width=160;/" -e "s/^height=.*/height=40;/" /etc/ajaxterm.conf
+service ajaxterm restart
+h=$(wget -q -O- http://169.254.169.254/latest/meta-data/public-hostname) || h=$(hostname -s)
+echo "<meta http-equiv='refresh' content='0;url=https://$h/'> " > /var/www/index.html
 
 # Update byobu profile; needs a whitespace at the end of the last line for ajaxterm (?)
 sed -i -e "s/^\(hardstatus .*\)'/\1 '/" /usr/share/byobu/profiles/common
