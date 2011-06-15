@@ -1,10 +1,10 @@
 ensemble: formula
 name: byobu-web
-revision: 28
-summary: "Remote byobu/ajaxterm access through a web browser"
+revision: 32
+summary: "Remote terminal access over https"
 description: |
  byobu-web provides remote terminal access through a web browser,
- using byobu, and ajaxterm.
+ using https, ajaxterm, and byobu.
 provides:
   website:
     interface: website
