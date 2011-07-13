@@ -32,7 +32,7 @@ service ajaxterm restart
 h=$(wget -q -O- http://169.254.169.254/latest/meta-data/public-hostname) || h=$(hostname -s)
 echo "<meta http-equiv='refresh' content='0;url=https://$h/'>" > /var/www/index.html
 
-sed -i -e "s/__HOSTNAME__/$h/" /var/www/html
+sed -i -e "s/__HOSTNAME__/$h/" /var/www/index.html
 
 # Update byobu profile; needs a whitespace at the end of the last line for ajaxterm (?)
 sed -i -e "s/^\(hardstatus .*\)'/\1 '/" /usr/share/byobu/profiles/common
