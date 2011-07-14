@@ -44,6 +44,7 @@ a2enmod proxy_http
 a2enmod ssl
 a2ensite default-ssl
 make-ssl-cert generate-default-snakeoil --force-overwrite
+sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/000-default
 sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/default-ssl
 service apache2 restart
 
