@@ -1,10 +1,11 @@
 ensemble: formula
-name: byobu-web
-revision: 32
-summary: "Remote terminal access over https"
+name: byobu-class
+revision: 33
+summary: "Remote terminal classroom over https"
 description: |
- byobu-web provides remote terminal access through a web browser,
- using https, ajaxterm, and byobu.
+ byobu-class provides remote terminal access through a web browser,
+ using https, ajaxterm, and byobu.  It operates in a one-writer,
+ many reader mode.
 provides:
   website:
     interface: website

@@ -50,3 +50,33 @@ sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost
 service apache2 restart
 
 # Now point a web-browser to this host's https://fully.qualified.hostname/
+
+# Set up the guest user
+echo "
+PasswordAuthentication yes
+AllowTcpForwarding no
+Match User guest
+  ForceCommand exec screen -x ubuntu/byobu-classroom
+" >> /etc/ssh/sshd_config
+service ssh restart
+cryptpw="ubXWbZ4Ffn.mg"		# password is 'guest'
+useradd -m -s /bin/bash -p "$cryptpw" guest
+touch "/home/guest/.screenrc"
+chown -R root:root /home/guest
+dpkg-statoverride --add root root 6755 /usr/bin/screen
+chmod 6755 /usr/bin/screen
+chmod 755 /var/run/screen
+service screen-cleanup start
+
+# Start the shared session
+# This line should go away, once this file releases with the next byobu
+[ -f /usr/share/byobu/profiles/classroom ] || echo "
+aclumask guest+r guest-w guest-x
+aclchg guest +r-w-x '#?'
+aclchg guest +x 'detach'
+multiuser on
+escape "^Bb"
+" > /usr/share/byobu/profiles/classroom
+
+# Launch the nested screen session (byobu running inside of screen)
+su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
