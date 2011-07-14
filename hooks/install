@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #    install hook
 #    Copyright (C) 2011 Canonical Ltd.
@@ -16,8 +16,6 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-set -x
 
 # Enable byobu, install byobu+ajaxterm
 export TERM=linux
@@ -77,6 +75,7 @@ aclchg guest +x 'detach'
 multiuser on
 escape "^Bb"
 " > /usr/share/byobu/profiles/classroom
+chmod 644 /usr/share/byobu/profiles/classroom
 
 # Launch the nested screen session (byobu running inside of screen)
 su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'

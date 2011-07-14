@@ -1,6 +1,6 @@
 ensemble: formula
 name: byobu-classroom
-revision: 33
+revision: 34
 summary: "Remote terminal classroom over https"
 description: |
  byobu-class provides remote terminal access through a web browser,
