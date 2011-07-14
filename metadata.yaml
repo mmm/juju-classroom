@@ -1,5 +1,5 @@
 ensemble: formula
-name: byobu-class
+name: byobu-classroom
 revision: 33
 summary: "Remote terminal classroom over https"
 description: |
