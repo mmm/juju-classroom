@@ -81,3 +81,5 @@ chmod 644 /usr/share/byobu/profiles/classroom
 
 # Launch the nested screen session (byobu running inside of screen)
 su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
+
+open-port 443

@@ -7,4 +7,4 @@ description: |
  many reader mode.
 provides:
   website:
-    interface: website
+    interface: https

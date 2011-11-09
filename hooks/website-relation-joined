@@ -17,18 +17,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+h=$(unit-get public-address)
 
-# Try to use metadata for a public IP; but fall back to local processing
-if ! ip=$(wget -q -O- http://169.254.169.254/latest/meta-data/public-ipv4); then
-	interface=$(awk 'END {print $1}' /proc/net/route)
-	ip=$(LC_ALL=C /sbin/ip -4 addr list dev "$interface" scope global)
-	ip=${ip#* inet }
-	ip=${ip%%/*}
-fi
-
-# Try to use metadata for a public hostname; but fall back to local processing
-if ! h=$(wget -q -O- http://169.254.169.254/latest/meta-data/public-hostname); then
-	h=$(hostname -s)
-fi
-
-relation-set ip="$ip" port="443" hostname="$h" url="https://$h"
+relation-set port="443" hostname="$h"
