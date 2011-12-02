@@ -82,4 +82,28 @@ chmod 644 /usr/share/byobu/profiles/classroom
 # Launch the nested screen session (byobu running inside of screen)
 su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
 
+
+install_juju() {
+  apt-add-repository ppa:juju/pkgs
+  apt-get update
+  apt-get -qq install -y juju charm-tools apt-cacher-ng zookeeper libvirt-bin lxc charm-helper-sh
+}
+install_juju
+
+configure_juju_local_provider() {
+  mkdir -p /home/ubuntu/.juju
+  cat > /home/ubuntu/.juju/environments.yaml <<EOF
+environments:
+  local:
+    type: local
+    data-dir: /tmp/juju-local
+    admin-secret: abcdefghijklmnopqrstuvwxyz1234567890
+    control-bucket: foo-bucket
+    default-series: oneiric
+EOF
+  chown -Rf ubuntu.ubuntu /home/ubuntu/.juju
+  sudo -su ubuntu ssh-keygen -q -N '' -t rsa -b 2048 -f /home/ubuntu/.ssh/id_rsa
+}
+configure_juju_local_provider #sudo -su ubuntu configure_juju_local_provider
+
 open-port 443

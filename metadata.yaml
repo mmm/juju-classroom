@@ -1,10 +1,14 @@
 ensemble: formula
-name: byobu-classroom
+name: juju-classroom
 summary: "Remote terminal classroom over https"
 description: |
  byobu-class provides remote terminal access through a web browser,
  using https, ajaxterm, and byobu.  It operates in a one-writer,
  many reader mode.
+
+ juju-class also installs juju in local(LXC) mode for demo/classroom purposes.
+
+ NOTE that this charm itself is not really intended to be run in local mode... unsure of the consequences.
 provides:
   website:
     interface: https
