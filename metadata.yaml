@@ -11,4 +11,4 @@ description: |
  NOTE that this charm itself is not really intended to be run in local mode... unsure of the consequences.
 provides:
   website:
-    interface: https
+    interface: http

@@ -19,4 +19,4 @@
 
 h=$(unit-get public-address)
 
-relation-set port="443" hostname="$h"
+relation-set port="80" hostname="$h"

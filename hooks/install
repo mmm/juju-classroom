@@ -106,4 +106,5 @@ EOF
 }
 configure_juju_local_provider #sudo -su ubuntu configure_juju_local_provider
 
-open-port 443
+open-port 443/TCP
+open-port 80/TCP
