@@ -1,87 +1,82 @@
 #!/bin/bash
-#
-#    install hook
-#    Copyright (C) 2011 Canonical Ltd.
-#
-#    Authors: Dustin Kirkland <kirkland@ubuntu.com>
-#             Mark Mims <mark.mims@canonical.com>
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, version 3 of the License.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Enable byobu, install byobu+ajaxterm
+set -eu
+
 export TERM=linux
+
 apt-get -y install ajaxterm byobu
-echo "byobu byobu/launch-by-default boolean true" | debconf-set-selections
-dpkg-reconfigure -phigh byobu
 
-# Update ajaxterm configuration
-# Most web browsers can do a little better than 80x25; bump to 160x40
-sed -i -e "s/^width=.*/width=160;/" -e "s/^height=.*/height=40;/" /etc/ajaxterm.conf
-service ajaxterm restart
-h=$(wget -q -O- http://169.254.169.254/latest/meta-data/public-hostname) || h=$(hostname -s)
-echo "<meta http-equiv='refresh' content='0;url=https://$h/'>" > /var/www/index.html
+configure_byobu() {
+  echo "byobu byobu/launch-by-default boolean true" | debconf-set-selections
+  dpkg-reconfigure -phigh byobu
 
-sed -i -e "s/__HOSTNAME__/$h/" /var/www/index.html
+  # Update byobu profile; needs a whitespace at the end of the last line for ajaxterm (?)
+  sed -i -e "s/^\(hardstatus .*\)'/\1 '/" /usr/share/byobu/profiles/common
+}
+configure_byobu
 
-# Update byobu profile; needs a whitespace at the end of the last line for ajaxterm (?)
-sed -i -e "s/^\(hardstatus .*\)'/\1 '/" /usr/share/byobu/profiles/common
+configure_ajaxterm() {
+  # Update ajaxterm configuration
+  # Most web browsers can do a little better than 80x25; bump to 160x40
+  sed -i -e "s/^width=.*/width=160;/" -e "s/^height=.*/height=40;/" /etc/ajaxterm.conf
+  service ajaxterm restart
+}
+configure_ajaxterm
 
-# Update ssh configuration
-sed -i -e "s:PasswordAuthentication.*:PasswordAuthentication yes:" /etc/ssh/sshd_config
-service ssh restart
+enable_ssh_passwords() {
+  sed -i 's/PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+  service ssh restart
+}
+enable_ssh_passwords
 
-# Update apache configuration
-a2enmod proxy_http
-a2enmod ssl
-a2ensite default-ssl
-make-ssl-cert generate-default-snakeoil --force-overwrite
-sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/000-default
-sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/default-ssl
-service apache2 restart
+configure_apache() {
+  h=`unit-get public-address`
+  echo "<meta http-equiv='refresh' content='0;url=https://$h/'>" > /var/www/index.html
 
-# Now point a web-browser to this host's https://fully.qualified.hostname/
+  sed -i -e "s/__HOSTNAME__/$h/" /var/www/index.html
 
-# Set up the guest user
-echo "
-PasswordAuthentication yes
-AllowTcpForwarding no
-Match User guest
-  ForceCommand exec screen -x ubuntu/byobu-classroom
-" >> /etc/ssh/sshd_config
-service ssh restart
-cryptpw="ubXWbZ4Ffn.mg"		# password is 'guest'
-useradd -m -s /bin/bash -p "$cryptpw" guest
-touch "/home/guest/.screenrc"
-chown -R root:root /home/guest
-dpkg-statoverride --add root root 6755 /usr/bin/screen
-chmod 6755 /usr/bin/screen
-chmod 755 /var/run/screen
-service screen-cleanup start
+  a2enmod proxy_http
+  a2enmod ssl
+  a2ensite default-ssl
+  make-ssl-cert generate-default-snakeoil --force-overwrite
+  sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/000-default
+  sed -i -e 's=^</VirtualHost>=  ProxyRequests Off\n  ProxyPass / http://localhost:8022/\n  ProxyPassReverse / http://localhost:8022/ \n</VirtualHost>=' /etc/apache2/sites-enabled/default-ssl
+  service apache2 restart
+}
+configure_apache
 
-# Start the shared session
-# This line should go away, once this file releases with the next byobu
-[ -f /usr/share/byobu/profiles/classroom ] || echo "
-aclumask guest+r guest-w guest-x
-aclchg guest +r-w-x '#?'
-aclchg guest +x 'detach'
-multiuser on
-escape "^Bb"
-" > /usr/share/byobu/profiles/classroom
-chmod 644 /usr/share/byobu/profiles/classroom
+add_user() {
+  echo "
+  PasswordAuthentication yes
+  AllowTcpForwarding no
+  Match User guest
+    ForceCommand exec screen -x ubuntu/byobu-classroom
+  " >> /etc/ssh/sshd_config
+  service ssh restart
+  cryptpw="ubXWbZ4Ffn.mg"		# password is 'guest'
+  useradd -m -s /bin/bash -p "$cryptpw" guest
+  touch "/home/guest/.screenrc"
+  chown -R root:root /home/guest
+  dpkg-statoverride --add root root 6755 /usr/bin/screen
+  chmod 6755 /usr/bin/screen
+  chmod 755 /var/run/screen
+  service screen-cleanup start
 
-# Launch the nested screen session (byobu running inside of screen)
-su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
+  # Start the shared session
+  # This line should go away, once this file releases with the next byobu
+  [ -f /usr/share/byobu/profiles/classroom ] || echo "
+  aclumask guest+r guest-w guest-x
+  aclchg guest +r-w-x '#?'
+  aclchg guest +x 'detach'
+  multiuser on
+  escape "^Bb"
+  " > /usr/share/byobu/profiles/classroom
+  chmod 644 /usr/share/byobu/profiles/classroom
 
+  # Launch the nested screen session (byobu running inside of screen)
+  su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
+}
+add_user
 
 install_juju() {
   apt-add-repository ppa:juju/pkgs
@@ -102,9 +97,13 @@ environments:
     default-series: oneiric
 EOF
   chown -Rf ubuntu.ubuntu /home/ubuntu/.juju
-  sudo -su ubuntu ssh-keygen -q -N '' -t rsa -b 2048 -f /home/ubuntu/.ssh/id_rsa
 }
-configure_juju_local_provider #sudo -su ubuntu configure_juju_local_provider
+configure_juju_local_provider 
+
+generate_ssh_keys() {
+  su -l ubuntu -c "ssh-keygen -q -N '' -t rsa -b 2048 -f /home/ubuntu/.ssh/id_rsa"
+}
+[ -f /home/ubuntu/.ssh/id_rsa ] || generate_ssh_keys
 
 open-port 443/TCP
 open-port 80/TCP
