@@ -106,8 +106,9 @@ generate_ssh_keys() {
 [ -f /home/ubuntu/.ssh/id_rsa ] || generate_ssh_keys
 
 # Launch the nested screen session (byobu running inside of screen)
-#su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
-su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom '
+su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
+# or just the basic screen session...
+#su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom '
 
 open-port 443/TCP
 open-port 80/TCP
