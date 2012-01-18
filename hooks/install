@@ -46,6 +46,7 @@ configure_apache() {
 configure_apache
 
 add_user() {
+
   echo "
   PasswordAuthentication yes
   AllowTcpForwarding no
@@ -53,6 +54,7 @@ add_user() {
     ForceCommand exec screen -x ubuntu/byobu-classroom
   " >> /etc/ssh/sshd_config
   service ssh restart
+  
   cryptpw="ubXWbZ4Ffn.mg"		# password is 'guest'
   useradd -m -s /bin/bash -p "$cryptpw" guest
   touch "/home/guest/.screenrc"
@@ -73,8 +75,6 @@ add_user() {
   " > /usr/share/byobu/profiles/classroom
   chmod 644 /usr/share/byobu/profiles/classroom
 
-  # Launch the nested screen session (byobu running inside of screen)
-  su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
 }
 add_user
 
@@ -104,6 +104,10 @@ generate_ssh_keys() {
   su -l ubuntu -c "ssh-keygen -q -N '' -t rsa -b 2048 -f /home/ubuntu/.ssh/id_rsa"
 }
 [ -f /home/ubuntu/.ssh/id_rsa ] || generate_ssh_keys
+
+# Launch the nested screen session (byobu running inside of screen)
+#su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom -t class byobu -S byobu-inner bash'
+su -l ubuntu -c 'screen -c /usr/share/byobu/profiles/classroom -d -m -S byobu-classroom '
 
 open-port 443/TCP
 open-port 80/TCP
